@@ -290,11 +290,14 @@ h1,h2,h3,p{ margin:0; color:var(--text-1); }
 /* ============ EXERCISE ============ */
 .exercise-stage{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 0 10px; }
 .breathe-circle-wrap{ width:220px; height:220px; display:flex; align-items:center; justify-content:center; position:relative; }
-.breathe-circle{ width:180px; height:180px; animation:auraPulse 4s ease-in-out infinite; }
+.breathe-circle{ width:180px; height:180px; transform-origin:50% 50%; will-change:transform; }
 .breathe-label{ position:absolute; text-align:center; color:#fff; font-weight:700; font-size:15px; text-shadow:0 2px 8px rgba(0,0,0,.25); }
 .timer-row{ display:flex; align-items:center; justify-content:center; gap:26px; margin-top:26px; }
 .ctrl-btn{ width:52px; height:52px; border-radius:50%; background:var(--card); border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow-tight); }
 .ctrl-btn.main{ width:64px; height:64px; background:var(--indigo-deep); color:#fff; }
+.progress-dots span.current{ background:var(--lavender); }
+.tally-dot{ width:14px; height:14px; border-radius:50%; border:2px solid var(--hairline); transition:.2s ease; }
+.tally-dot.filled{ background:var(--indigo-deep); border-color:var(--indigo-deep); transform:scale(1.1); }
 
 /* ============ JOURNAL ============ */
 .journal-textarea{ width:100%; min-height:150px; border:none; background:transparent; resize:none; outline:none; font-family:var(--font); font-size:15.5px; line-height:1.6; color:var(--text-1); }
@@ -574,7 +577,7 @@ h1,h2,h3,p{ margin:0; color:var(--text-1); }
             <div class="tool-ic" style="background:var(--sky-soft);">🌬️</div>
             <div><div class="headline-m" style="font-size:14px;">Breathing exercise</div><div class="body-s">3 min · Box breathing</div></div>
           </div>
-          <div class="tool-card" onclick="go('exercise')">
+          <div class="tool-card" onclick="go('grounding')">
             <div class="tool-ic" style="background:var(--lavender-softer);">🌿</div>
             <div><div class="headline-m" style="font-size:14px;">Grounding exercise</div><div class="body-s">5 senses, 4 min</div></div>
           </div>
@@ -643,9 +646,9 @@ h1,h2,h3,p{ margin:0; color:var(--text-1); }
           <div class="headline-m">Box Breathing</div>
           <div class="body-s" onclick="go('home')" style="cursor:pointer;">End ✕</div>
         </div>
-        <div class="exercise-stage">
+        <div class="exercise-stage" id="breathSessionUI">
           <div class="breathe-circle-wrap">
-            <svg class="breathe-circle" viewBox="0 0 200 200">
+            <svg class="breathe-circle" id="breathCircleSvg" viewBox="0 0 200 200">
               <defs>
                 <radialGradient id="breatheGrad" cx="35%" cy="30%" r="75%">
                   <stop offset="0%" stop-color="#CFE1F2"/>
@@ -655,16 +658,56 @@ h1,h2,h3,p{ margin:0; color:var(--text-1); }
               </defs>
               <circle cx="100" cy="100" r="96" fill="url(#breatheGrad)"/>
             </svg>
-            <div class="breathe-label">Breathe in<br>for 4 seconds</div>
+            <div class="breathe-label">
+              <div id="breathLabel">Breathe in</div>
+              <div style="font-size:13px; font-weight:500; opacity:.85; margin-top:4px;" id="breathCountdown">4</div>
+            </div>
           </div>
-          <div class="body-s" style="margin-top:22px;">Cycle 2 of 6</div>
+          <div class="body-s" style="margin-top:22px;" id="breathCycleText">Cycle 1 of 6</div>
           <div class="timer-row">
-            <div class="ctrl-btn">🔊</div>
-            <div class="ctrl-btn main">⏸</div>
+            <div class="ctrl-btn" id="breathSoundBtn" onclick="toggleBreathSound()">🔊</div>
+            <div class="ctrl-btn main" id="breathPauseBtn" onclick="toggleBreathPause()">⏸</div>
             <div class="ctrl-btn" onclick="go('home')">⏹</div>
           </div>
         </div>
-        <div class="card" style="margin-top:30px;">
+        <div class="card" style="margin-top:30px; display:none;" id="breathMoodCheck">
+          <div class="headline-m" style="font-size:15px;">How do you feel now?</div>
+          <div class="mood-row" style="margin-top:14px;">
+            <div class="mood-opt" data-mood><div class="mood-circle">😔</div></div>
+            <div class="mood-opt" data-mood><div class="mood-circle">😕</div></div>
+            <div class="mood-opt" data-mood><div class="mood-circle">😐</div></div>
+            <div class="mood-opt" data-mood><div class="mood-circle">🙂</div></div>
+            <div class="mood-opt" data-mood><div class="mood-circle">😄</div></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="go('home')">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 5b. GROUNDING EXERCISE ================= -->
+    <div class="screen" id="grounding">
+      <div class="screen-pad">
+        <div class="top-row">
+          <div class="headline-m">Grounding Exercise</div>
+          <div class="body-s" onclick="go('home')" style="cursor:pointer;">End ✕</div>
+        </div>
+
+        <div class="progress-dots" id="groundDots" style="margin-top:20px;"></div>
+
+        <div id="groundSessionUI">
+          <div style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:16px 0 6px;">
+            <div style="width:76px;height:76px;border-radius:50%;background:var(--lavender-softer);display:flex;align-items:center;justify-content:center;font-size:32px;" id="groundIcon">👁️</div>
+            <div class="eyebrow" style="margin-top:16px;" id="groundStepLabel">Step 1 of 5 · See</div>
+            <h2 class="headline-l" style="margin-top:8px; max-width:280px;" id="groundPrompt">Notice 5 things you can see around you right now.</h2>
+
+            <div style="display:flex; gap:10px; margin-top:22px;" id="groundTally"></div>
+
+            <button class="btn btn-primary" style="margin-top:26px; max-width:260px;" id="groundNoticeBtn" onclick="noticeGroundingItem()">I noticed one</button>
+            <div class="body-s" style="margin-top:14px; cursor:pointer;" onclick="skipGroundingStep()">Skip this step</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px; display:none;" id="groundMoodCheck">
           <div class="headline-m" style="font-size:15px;">How do you feel now?</div>
           <div class="mood-row" style="margin-top:14px;">
             <div class="mood-opt" data-mood><div class="mood-circle">😔</div></div>
@@ -927,11 +970,14 @@ function buildTabBar(containerId, activeId){
 });
 
 function go(id){
+  stopBreathing();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.getElementById('phoneScreen').scrollTop = 0;
   const scr = document.getElementById(id);
   if(scr) scr.scrollTop = 0;
+  if(id === 'exercise') startBreathing();
+  if(id === 'grounding') startGrounding();
 }
 
 /* ---- Guest / free-chat gating ---- */
@@ -1101,6 +1147,189 @@ document.querySelectorAll('[data-mood]').forEach(c=>{
     c.classList.add('selected');
   });
 });
+
+/* =========================================================
+   BOX BREATHING — phase-timer driven (inhale/hold/exhale/hold)
+   ========================================================= */
+const BOX_PHASES = [
+  { name:'inhale', label:'Breathe in', seconds:4, scale:1.15 },
+  { name:'hold1',  label:'Hold',       seconds:4, scale:1.15 },
+  { name:'exhale', label:'Breathe out',seconds:4, scale:0.82 },
+  { name:'hold2',  label:'Hold',       seconds:4, scale:0.82 },
+];
+const BOX_TOTAL_CYCLES = 6;
+
+let breathTimerId = null;
+let breathPhaseIndex = 0;
+let breathCycle = 1;
+let breathSecondsLeft = 4;
+let breathPaused = false;
+let breathSoundOn = true;
+let breathAudioCtx = null;
+
+function startBreathing(){
+  breathPhaseIndex = 0;
+  breathCycle = 1;
+  breathPaused = false;
+  breathSoundOn = true;
+  document.getElementById('breathPauseBtn').textContent = '⏸';
+  document.getElementById('breathSoundBtn').textContent = '🔊';
+  document.getElementById('breathSessionUI').style.display = 'flex';
+  document.getElementById('breathMoodCheck').style.display = 'none';
+  document.getElementById('breathCircleSvg').style.transition = 'none';
+  document.getElementById('breathCircleSvg').style.transform = 'scale(1)';
+  enterBreathPhase();
+  breathTimerId = setInterval(breathTick, 1000);
+}
+
+function stopBreathing(){
+  if(breathTimerId){ clearInterval(breathTimerId); breathTimerId = null; }
+}
+
+function breathTick(){
+  if(breathPaused) return;
+  breathSecondsLeft--;
+  if(breathSecondsLeft <= 0){
+    breathPhaseIndex++;
+    if(breathPhaseIndex >= BOX_PHASES.length){
+      breathPhaseIndex = 0;
+      breathCycle++;
+      if(breathCycle > BOX_TOTAL_CYCLES){
+        finishBreathing();
+        return;
+      }
+    }
+    enterBreathPhase();
+  } else {
+    document.getElementById('breathCountdown').textContent = breathSecondsLeft;
+  }
+}
+
+function enterBreathPhase(){
+  const phase = BOX_PHASES[breathPhaseIndex];
+  breathSecondsLeft = phase.seconds;
+  document.getElementById('breathLabel').textContent = phase.label;
+  document.getElementById('breathCountdown').textContent = breathSecondsLeft;
+  document.getElementById('breathCycleText').textContent = 'Cycle ' + breathCycle + ' of ' + BOX_TOTAL_CYCLES;
+  const circle = document.getElementById('breathCircleSvg');
+  circle.style.transition = 'transform ' + phase.seconds + 's ease-in-out';
+  circle.style.transform = 'scale(' + phase.scale + ')';
+  playBreathChime();
+}
+
+function toggleBreathPause(){
+  breathPaused = !breathPaused;
+  document.getElementById('breathPauseBtn').textContent = breathPaused ? '▶' : '⏸';
+  const circle = document.getElementById('breathCircleSvg');
+  circle.style.animationPlayState = breathPaused ? 'paused' : 'running';
+}
+
+function toggleBreathSound(){
+  breathSoundOn = !breathSoundOn;
+  document.getElementById('breathSoundBtn').textContent = breathSoundOn ? '🔊' : '🔇';
+}
+
+function playBreathChime(){
+  if(!breathSoundOn) return;
+  try{
+    if(!breathAudioCtx) breathAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = breathAudioCtx.createOscillator();
+    const gain = breathAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 320;
+    gain.gain.setValueAtTime(0.0001, breathAudioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.06, breathAudioCtx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0.0001, breathAudioCtx.currentTime + 0.4);
+    osc.connect(gain).connect(breathAudioCtx.destination);
+    osc.start();
+    osc.stop(breathAudioCtx.currentTime + 0.4);
+  }catch(e){ /* audio not available in this environment; fail silently */ }
+}
+
+function finishBreathing(){
+  stopBreathing();
+  document.getElementById('breathSessionUI').style.display = 'none';
+  document.getElementById('breathMoodCheck').style.display = 'block';
+}
+
+/* =========================================================
+   GROUNDING EXERCISE — self-paced 5-4-3-2-1 sensory walkthrough
+   ========================================================= */
+const GROUNDING_STEPS = [
+  { count:5, icon:'👁️', sense:'See',        prompt:'Notice 5 things you can see around you right now.' },
+  { count:4, icon:'✋', sense:'Touch',       prompt:'Notice 4 things you can feel or touch.' },
+  { count:3, icon:'👂', sense:'Hear',        prompt:'Notice 3 things you can hear.' },
+  { count:2, icon:'👃', sense:'Smell',       prompt:'Notice 2 things you can smell.' },
+  { count:1, icon:'🌸', sense:'Appreciate',  prompt:'Name 1 thing you appreciate about yourself right now.' },
+];
+
+let groundStepIndex = 0;
+let groundNoticed = 0;
+
+function startGrounding(){
+  groundStepIndex = 0;
+  document.getElementById('groundSessionUI').style.display = 'block';
+  document.getElementById('groundMoodCheck').style.display = 'none';
+  renderGroundStep();
+}
+
+function renderGroundStep(){
+  const step = GROUNDING_STEPS[groundStepIndex];
+  groundNoticed = 0;
+  document.getElementById('groundIcon').textContent = step.icon;
+  document.getElementById('groundStepLabel').textContent =
+    'Step ' + (groundStepIndex + 1) + ' of ' + GROUNDING_STEPS.length + ' · ' + step.sense;
+  document.getElementById('groundPrompt').textContent = step.prompt;
+
+  const tally = document.getElementById('groundTally');
+  tally.innerHTML = '';
+  for(let i = 0; i < step.count; i++){
+    const dot = document.createElement('div');
+    dot.className = 'tally-dot';
+    tally.appendChild(dot);
+  }
+  document.getElementById('groundNoticeBtn').textContent = 'I noticed one (0/' + step.count + ')';
+  renderGroundDots();
+}
+
+function renderGroundDots(){
+  const wrap = document.getElementById('groundDots');
+  wrap.innerHTML = GROUNDING_STEPS.map((s, i) => {
+    const cls = i < groundStepIndex ? 'done' : (i === groundStepIndex ? 'current' : '');
+    return '<span class="' + cls + '"></span>';
+  }).join('');
+}
+
+function noticeGroundingItem(){
+  const step = GROUNDING_STEPS[groundStepIndex];
+  if(groundNoticed >= step.count) return;
+  groundNoticed++;
+  const dots = document.querySelectorAll('#groundTally .tally-dot');
+  dots[groundNoticed - 1].classList.add('filled');
+  document.getElementById('groundNoticeBtn').textContent = 'I noticed one (' + groundNoticed + '/' + step.count + ')';
+  if(groundNoticed >= step.count){
+    setTimeout(advanceGroundingStep, 450);
+  }
+}
+
+function skipGroundingStep(){ advanceGroundingStep(); }
+
+function advanceGroundingStep(){
+  groundStepIndex++;
+  if(groundStepIndex >= GROUNDING_STEPS.length){
+    finishGrounding();
+  } else {
+    renderGroundStep();
+  }
+}
+
+function finishGrounding(){
+  document.getElementById('groundSessionUI').style.display = 'none';
+  document.getElementById('groundMoodCheck').style.display = 'block';
+  document.querySelectorAll('#groundDots span').forEach(s => {
+    s.classList.add('done'); s.classList.remove('current');
+  });
+}
 </script>
 </body>
 </html>
