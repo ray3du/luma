@@ -36,3 +36,17 @@
 | Text Primary | `#F3EFFB` | `#241F45` |
 | Text Secondary | `#B3ABD1` | `#6B6588` |
 | Text Tertiary | `#786F9C` | `#9791B3` |
+
+
+`Typography` object:
+
+| Style | Size | Weight | Use |
+|---|---|---|---|
+| `headline-xl` | 28sp | 700 | Welcome hero |
+| `headline-l` | 22sp | 700 | Screen titles |
+| `headline-m` | 18sp | 600 | Card titles |
+| `body-m` | 15sp | 400 | Primary body text |
+| `body-s` | 13sp | 400 | Secondary/meta text |
+| `caption` | 11sp | 400 | Legal/fine print |
+| `eyebrow` | 12sp | 700, uppercase, +0.08em tracking | Section labels |
+
